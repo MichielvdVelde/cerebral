@@ -73,7 +73,7 @@ export interface Message {
   /** The details of the message. */
   details?: string;
   /** The mentions in the message. */
-  mentions?: string[];
+  mentions: Record<string, number>;
 }
 
 /**

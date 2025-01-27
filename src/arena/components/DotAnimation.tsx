@@ -6,9 +6,8 @@ const DotAnimation: FC = () => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setCount = useCallback(() => {
-    const newCount = count === 3 ? 0 : count + 1;
-    oSetCount(newCount);
-  }, [count]);
+    oSetCount((count) => count === 3 ? 0 : count + 1);
+  }, [oSetCount]);
 
   useEffect(() => {
     timerRef.current = setTimeout(setCount, 500);

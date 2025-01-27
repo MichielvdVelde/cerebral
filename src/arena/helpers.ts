@@ -9,18 +9,18 @@ const MENTIONS_REGEX = /@(\w+)/g;
 export function getMentions(
   text: string,
   participants: string[],
-): string[] {
-  const mentions: string[] = [];
+): Record<string, number> {
+  const mentions: Record<string, number> = {};
   let match;
 
   while ((match = MENTIONS_REGEX.exec(text)) !== null) {
     const mentioned = match[1];
-    const index = participants.findIndex((participant) =>
-      participant.toLowerCase() === mentioned.toLowerCase()
+    const participant = participants.find(
+      (participant) => participant.toLowerCase() === mentioned.toLowerCase(),
     );
 
-    if (!mentions.includes(participants[index])) {
-      mentions.push(participants[index]);
+    if (participant) {
+      mentions[participant] = (mentions[participant] ?? 0) + 1;
     }
   }
 

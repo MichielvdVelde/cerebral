@@ -12,6 +12,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
+import Divider from "@mui/material/Divider";
 import Markdown from "react-markdown";
 
 interface MessageDetailProps {
@@ -35,11 +36,12 @@ const MessageDetail: FC<MessageDetailProps> = (
     return null;
   }
 
+  const mentions = Object.keys(message.mentions);
   const timing = message.timing.end - message.timing.start;
 
   return (
     <Dialog open onClose={onClose}>
-      <DialogTitle>{message.name}</DialogTitle>
+      <DialogTitle>Message by {message.name}</DialogTitle>
       <DialogContent>
         <Box>
           <Grid container spacing={2}>
@@ -48,26 +50,26 @@ const MessageDetail: FC<MessageDetailProps> = (
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">
-                {message.facet.name} ({message.facet.role})
+                {message.facet.name}
               </Typography>
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">Role</Typography>
             </Grid>
             <Grid size={6}>
-              <Typography variant="body2">{message.role}</Typography>
+              <Typography variant="body2">{message.facet.role}</Typography>
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">Usage</Typography>
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">
-                Prompt tokens: {message.usage.prompt}
-                <br />Completion tokens: {message.usage.completion}
+                Prompt: {message.usage.prompt} tokens
+                <br />Completion: {message.usage.completion} tokens
               </Typography>
             </Grid>
             <Grid size={6}>
-              <Typography variant="body2">Timing</Typography>
+              <Typography variant="body2">Duration</Typography>
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">
@@ -79,7 +81,7 @@ const MessageDetail: FC<MessageDetailProps> = (
             </Grid>
             <Grid size={6}>
               <Typography variant="body2">
-                {message.mentions?.join(", ") ?? "None"}
+                {mentions.length ? mentions.join(", ") : "None"}
               </Typography>
             </Grid>
             <Grid size={12}>
@@ -119,10 +121,14 @@ const MessageDetail: FC<MessageDetailProps> = (
                           <Switch
                             checked={mdEnabled}
                             onChange={(e) => setMdEnabled(e.target.checked)}
+                            size="small"
                           />
                         }
                         label={`${mdEnabled ? "Disable" : "Enable"} Markdown`}
                       />
+                    </Grid>
+                    <Grid size={12}>
+                      <Divider />
                     </Grid>
                     <Grid size={12}>
                       <Typography variant="body2">

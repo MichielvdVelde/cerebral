@@ -60,8 +60,6 @@ Your chat response. This will be visible to the other participants.
 
 ## Details
 
-> Follow the additional instructions below.
-
 {{.}}
 {{/details}}
 `;

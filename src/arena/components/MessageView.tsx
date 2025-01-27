@@ -32,7 +32,7 @@ const MessageView: FC<{ message: Message }> = ({ message }) => {
         onClose={closeDetail}
       />
       <Box>
-        <Typography variant="h6">{message.name}</Typography>
+        <Typography variant="h6" sx={{ m: 1 }}>{message.name}</Typography>
         <Box>
           <Accordion>
             <AccordionSummary expandIcon={<ExpandIcon />}>
@@ -58,13 +58,18 @@ const MessageView: FC<{ message: Message }> = ({ message }) => {
               <Tooltip
                 title={
                   <Typography variant="caption">
-                    Prompt: {message.usage.prompt}
+                    Prompt: {message.usage.prompt.toLocaleString("en-US")}{" "}
+                    tokens
                     <br />
-                    Completion: {message.usage.completion}
+                    Completion:{" "}
+                    {message.usage.completion.toLocaleString("en-US")} tokens
                   </Typography>
                 }
               >
-                <span>{message.usage.prompt + message.usage.completion}</span>
+                <span>
+                  {(message.usage.prompt + message.usage.completion)
+                    .toLocaleString("en-US")} tokens
+                </span>
               </Tooltip>
             </Typography>
             <Typography variant="caption" sx={{ ml: "auto", mr: 2 }}>

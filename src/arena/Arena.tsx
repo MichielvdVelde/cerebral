@@ -122,7 +122,7 @@ export const Arena: FC = () => {
 
           {working
             ? (
-              <Grid size={12}>
+              <Grid size={12} sx={{ p: 2 }}>
                 <Typography variant="h6">
                   {participants.find((p) => p.id === working)!.name}
                 </Typography>

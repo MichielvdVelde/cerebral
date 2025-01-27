@@ -1,4 +1,4 @@
-import type { Session } from "./types";
+import type { Facet, Message, Session } from "./types";
 import { useCallback, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
@@ -12,7 +12,17 @@ import {
 } from "./slice";
 import { chatCompletion } from "./provider";
 
-export function useSessions() {
+export interface SessionsHook {
+  /** All sessions. */
+  sessions: Record<string, Session>;
+  /** Create a new session. */
+  createSession: (session: Session) => void;
+}
+
+/**
+ * Hook for managing sessions.
+ */
+export function useSessions(): SessionsHook {
   const dispatch = useAppDispatch();
   const sessions = useAppSelector(selectSessions);
 
@@ -26,7 +36,26 @@ export function useSessions() {
   }), [sessions, create]);
 }
 
-export function useSession(id: string) {
+export interface SessionHook {
+  /** The current round. */
+  round: number;
+  /** The participants. */
+  participants: Facet[];
+  /** The current working participant. */
+  working: false | string;
+  /** The current error message. */
+  error?: string;
+  /** The messages. */
+  messages: Message[];
+  /** Move to the next round. */
+  nextRound: (options?: { facetId?: string; details?: string }) => void;
+}
+
+/**
+ * Hook for managing a session.
+ * @param id The session ID.
+ */
+export function useSession(id: string): SessionHook {
   const dispatch = useAppDispatch();
   const session = useAppSelector(selectSession(id));
   const { brief, participants, round, working, error, messages } = session;
@@ -45,16 +74,19 @@ export function useSession(id: string) {
       dispatch(setError({ id }));
       dispatch(setWorking({ id, working: facet.id }));
 
-      chatCompletion(facet, participants, brief, messages, details).then(
-        (response) => {
-          dispatch(addMessage({ id, message: response }));
+      const model = "meta-llama-3.1-8b-instruct";
+
+      chatCompletion(facet, participants, brief, messages, { details, model })
+        .then(
+          (response) => {
+            dispatch(addMessage({ id, message: response }));
+            dispatch(setWorking({ id, working: false }));
+            dispatch(setRound({ id, round: round + 1 }));
+          },
+        ).catch((error) => {
           dispatch(setWorking({ id, working: false }));
-          dispatch(setRound({ id, round: round + 1 }));
-        },
-      ).catch((error) => {
-        dispatch(setWorking({ id, working: false }));
-        dispatch(setError({ id, error: error.message }));
-      });
+          dispatch(setError({ id, error: error.message }));
+        });
     },
     [round, working],
   );

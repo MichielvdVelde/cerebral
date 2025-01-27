@@ -12,18 +12,41 @@ const provider = new OpenAI({
 const thinkingRegex = /<thinking>(.*?)<\/thinking>/s;
 const responseRegex = /<response>(.*?)(?:<\/response>|$)/s;
 
+export interface CompletionOptions {
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stop?: string | string[];
+  details?: string;
+}
+
+/**
+ * Generate a completion for a given facet.
+ * @param facet The facet to generate a completion for.
+ * @param participants The participants in the conversation.
+ * @param brief The brief for the conversation.
+ * @param messages The messages in the conversation.
+ * @param options The options for the completion.
+ */
 export async function chatCompletion(
   facet: Facet,
   participants: Facet[],
   brief: string,
   messages: Message[],
-  details?: string,
+  options: CompletionOptions,
 ): Promise<Message> {
+  const { details, ...rest } = options;
+
   const systemMessage = {
     role: "system",
     content: compileTemplate({
       ...facet,
-      participants,
+      participants: participants.filter((participant) =>
+        participant.id !== facet.id
+      ),
       brief,
       details,
     }),
@@ -38,18 +61,12 @@ export async function chatCompletion(
   const start = performance.now();
 
   const response = await provider.chat.completions.create({
-    model: "meta-llama-3.1-8b-instruct",
+    ...rest,
     // @ts-expect-error
     messages: [systemMessage, ...chatMessages],
   });
 
   const end = performance.now();
-  const duration = end - start;
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("Chat completion duration:", `${duration.toFixed(2)}ms`);
-  }
-
   const { content } = response.choices[0].message;
 
   if (!content) {
@@ -69,16 +86,6 @@ export async function chatCompletion(
   const thinkingContent = thinkingMatch[1];
   const responseContent = responseMatch[1];
 
-  const usage = {
-    prompt: response.usage?.prompt_tokens ?? 0,
-    completion: response.usage?.completion_tokens ?? 0,
-  };
-
-  const mentions = getMentions(
-    responseContent,
-    participants.map((participant) => participant.name),
-  );
-
   return {
     name: facet.name,
     facet,
@@ -87,18 +94,27 @@ export async function chatCompletion(
       thinking: thinkingContent,
       response: responseContent,
     },
-    usage,
+    usage: {
+      prompt: response.usage?.prompt_tokens ?? 0,
+      completion: response.usage?.completion_tokens ?? 0,
+    },
     timing: {
       start,
       end,
     },
     template: systemMessage.content,
     details,
-    mentions,
+    mentions: getMentions(
+      responseContent,
+      participants.map((participant) => participant.name),
+    ),
   };
 }
 
-// embed
+/**
+ * Generate embeddings for a given text.
+ * @param text The text to generate embeddings for.
+ */
 export async function embeddings(text: string): Promise<number[]> {
   const response = await provider.embeddings.create({
     model: "text-llama-3.1-8b-v1",
